@@ -40,11 +40,11 @@ public class TicketService
     }
 
     public async Task<ServiceResult<TicketDetailsResponse>> GetTicketByIdAsync(long id, long currentUserId,
-        string currentUserRole)
+        UserRole currentUserRole)
     {
         var query = _dbContext.Tickets.AsNoTracking().Where(x => x.Id == id);
 
-        if (currentUserRole == "Client") query = query.Where(x => x.CreatedById == currentUserId);
+        if (currentUserRole == UserRole.Client) query = query.Where(x => x.CreatedById == currentUserId);
 
         var ticket = await query.Select(x => new TicketDetailsResponse(x.Id, x.Title, x.Description,
                 x.Status.ToString(), x.Priority.ToString(), x.Category.ToString(), x.CreatedAt, x.UpdatedAt, x.ClosedAt,
@@ -93,15 +93,15 @@ public class TicketService
     }
 
     public async Task<ServiceResult> UpdateTicketAsync(long id, UpdateTicketRequest request, long currentUserId,
-        string currentUserRole)
+        UserRole currentUserRole)
     {
         // TODO: add validation
         var ticket = await _dbContext.Tickets.FindAsync(id);
 
         if (ticket == null) return ServiceResult.NotFound("Ticket not found");
-        if (currentUserRole != "Agent" && currentUserRole != "Admin")
+        if (currentUserRole != UserRole.Agent && currentUserRole != UserRole.Admin)
             return ServiceResult.Forbidden("You do not have permission to update tickets");
-        if (currentUserRole == "Agent" && ticket.CreatedById != currentUserId)
+        if (currentUserRole == UserRole.Agent && ticket.CreatedById != currentUserId)
             return ServiceResult.Forbidden("You do not have permission to update this ticket");
 
         if (request.Title != null) ticket.Title = request.Title.Trim();
@@ -117,16 +117,16 @@ public class TicketService
         return ServiceResult.Success();
     }
 
-    public async Task<ServiceResult> DeleteTicketAsync(long id, long currentUserId, string currentUserRole)
+    public async Task<ServiceResult> DeleteTicketAsync(long id, long currentUserId, UserRole currentUserRole)
     {
         var ticket = await _dbContext.Tickets.FindAsync(id);
 
         if (ticket == null) return ServiceResult.NotFound("Ticket not found");
 
-        if (currentUserRole != "Admin" && currentUserRole != "Agent")
+        if (currentUserRole != UserRole.Admin && currentUserRole != UserRole.Agent)
             return ServiceResult.Forbidden("You do not have permission to delete tickets");
 
-        if (currentUserRole == "Agent" && ticket.CreatedById != currentUserId)
+        if (currentUserRole == UserRole.Agent && ticket.CreatedById != currentUserId)
             return ServiceResult.Forbidden("You do not have permission to delete this ticket");
 
         _dbContext.Tickets.Remove(ticket);
