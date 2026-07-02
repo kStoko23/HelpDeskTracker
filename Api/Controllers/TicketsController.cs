@@ -56,22 +56,39 @@ public class TicketsController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    public async Task<IActionResult> PostTicket()
+    public async Task<IActionResult> PostTicket(CreateTicketRequest request)
     {
-        throw new NotImplementedException();
+        var userId = User.GetUserId();
+        var result = await _ticketService.PostTicketAsync(request, userId);
+
+        if (!result.IsSuccess) return this.ToActionResult(result);
+
+        return CreatedAtAction(nameof(GetTicket), new { id = result.Data.Id }, result.Data);
     }
 
     [HttpPatch("{id:long}")]
     [Authorize]
-    public async Task<IActionResult> PatchTicket(long id)
+    public async Task<IActionResult> UpdateTicket(long id, UpdateTicketRequest request)
     {
-        throw new NotImplementedException();
+        var userId = User.GetUserId();
+        var userRole = User.GetUserRole();
+        var result = await _ticketService.UpdateTicketAsync(id, request, userId, userRole);
+        
+        if (!result.IsSuccess) return this.ToActionResult(result);
+        
+        return NoContent();
     }
 
     [HttpDelete("{id:long}")]
-    [Authorize]
+    [Authorize(Policy = "AgentOrAdmin")]
     public async Task<IActionResult> DeleteTicket(long id)
     {
-        throw new NotImplementedException();
+        var userId = User.GetUserId();
+        var userRole = User.GetUserRole();
+        var result = await _ticketService.DeleteTicketAsync(id, userId, userRole);
+
+        if (!result.IsSuccess) return this.ToActionResult(result);
+
+        return NoContent();
     }
 }

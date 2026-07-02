@@ -38,7 +38,6 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
         var result = await _authService.RegisterAsync(request);
