@@ -9,6 +9,8 @@ public class User
     public UserRole Role { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool MustChangePassword { get; set; }
+    public DateTime? TempPasswordExpiresAt { get; set; }
     public ICollection<Ticket> CreatedTickets { get; set; } = [];
     public ICollection<Ticket> AssignedTickets { get; set; } = [];
     public ICollection<Comment> Comments { get; set; } = [];

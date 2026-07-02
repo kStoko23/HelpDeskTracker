@@ -31,6 +31,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
         builder.Property(x => x.CreatedAt)
             .IsRequired();
+        builder.Property(x => x.MustChangePassword)
+            .HasDefaultValue(false)
+            .IsRequired();
 
         builder.HasIndex(x => x.Email).IsUnique();
     }
