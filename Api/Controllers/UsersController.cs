@@ -34,7 +34,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> GetUser(long id)
     {
         var result = await _userService.GetUserAsync(id);
-        
+
         if (!result.IsSuccess) return this.ToActionResult(result);
 
         return Ok(result.Data);
@@ -46,10 +46,21 @@ public class UsersController : ControllerBase
     {
         var userId = User.GetUserId();
         var result = await _userService.GetUserAsync(userId);
-        
+
         if (!result.IsSuccess) return this.ToActionResult(result);
 
         return Ok(result.Data);
+    }
+
+    [HttpPost]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> CreateUser(CreateUserRequest request)
+    {
+        var result = await _userService.CreateUserAsync(request);
+
+        if (!result.IsSuccess) return this.ToActionResult(result);
+
+        return CreatedAtAction(nameof(GetUser), new { id = result.Data.Id }, result.Data);
     }
 
     [HttpPatch("{id:long}")]
@@ -58,7 +69,7 @@ public class UsersController : ControllerBase
     {
         var userId = User.GetUserId();
         var userRole = User.GetUserRole();
-        
+
         var result = await _userService.UpdateUserAsync(id, userId, userRole, request);
         if (!result.IsSuccess) return this.ToActionResult(result);
 

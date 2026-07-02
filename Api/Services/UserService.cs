@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Api.Common;
 using Api.Data;
 using Api.Entities;
@@ -79,6 +80,34 @@ public class UserService
         return ServiceResult<UserDetailResponse>.Success(user);
     }
 
+    public async Task<ServiceResult<CreateUserResponse>> CreateUserAsync(CreateUserRequest request)
+    {
+        var email = request.Email.Trim().ToLower();
+
+        if (await _dbContext.Users.AnyAsync(x => x.Email == email))
+            return ServiceResult<CreateUserResponse>.Conflict("Email already taken");
+
+        var temporaryPassword = GenerateTemporaryPassword();
+
+        var user = new User
+        {
+            Email = email,
+            Username = request.Username.Trim(),
+            Role = request.Role,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            MustChangePassword = true,
+            TempPasswordExpiresAt = DateTime.UtcNow.AddDays(1),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(temporaryPassword)
+        };
+
+        _dbContext.Users.Add(user);
+        await _dbContext.SaveChangesAsync();
+
+        return ServiceResult<CreateUserResponse>.Success(new CreateUserResponse(user.Id, user.Email, user.Username,
+            user.Role, temporaryPassword, user.TempPasswordExpiresAt.Value));
+    }
+
     public async Task<ServiceResult> UpdateUserAsync(long id, long currentUserId, UserRole currentUserRole,
         UpdateUserRequest request)
     {
@@ -99,8 +128,9 @@ public class UserService
         if (request.Email != null)
         {
             var email = request.Email.Trim().ToLower();
-            
-            if(await _dbContext.Users.AnyAsync(x=>x.Email == email)) return ServiceResult.Conflict("Email already taken");
+
+            if (await _dbContext.Users.AnyAsync(x => x.Email == email && x.Id != id))
+                return ServiceResult.Conflict("Email already taken");
 
             user.Email = email;
         }
@@ -120,5 +150,13 @@ public class UserService
         user.IsActive = false;
         await _dbContext.SaveChangesAsync();
         return ServiceResult.Success();
+    }
+
+    private static string GenerateTemporaryPassword()
+    {
+        var randomNumber = new byte[12];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
     }
 }
