@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Api.Entities;
 
 namespace Api.Common;
 
@@ -6,16 +7,21 @@ public static class ClaimsPrincipalExtension
 {
     public static long GetUserId(this ClaimsPrincipal user)
     {
-        var value = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (value == null) throw new UnauthorizedAccessException("Missing user id claim");
+        var value = user.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        return long.Parse(value);
+        if (!long.TryParse(value, out var userId))
+            throw new UnauthorizedAccessException("Invalid user id claim.");
+
+        return userId;
     }
 
-    public static string GetUserRole(this ClaimsPrincipal user)
+    public static UserRole GetUserRole(this ClaimsPrincipal user)
     {
-        var value = user.FindFirst(ClaimTypes.Role)?.Value;
-        if(value == null)  throw new UnauthorizedAccessException("Missing role claim");
-        return value;
+        var value = user.FindFirstValue(ClaimTypes.Role);
+
+        if (!Enum.TryParse<UserRole>(value, out var role))
+            throw new UnauthorizedAccessException("Invalid user role claim.");
+
+        return role;
     }
 }

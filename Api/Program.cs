@@ -15,6 +15,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<TicketService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<UserService>();
 
 builder.Services.AddDbContext<HelpDeskDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));

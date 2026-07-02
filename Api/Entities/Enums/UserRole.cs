@@ -2,7 +2,7 @@ namespace Api.Entities;
 
 public enum UserRole
 {
-    Admin,
+    Client,
     Agent,
-    Client
+    Admin
 }
